@@ -29,7 +29,7 @@ DCE is a next-generation Retrieval-Augmented Generation (RAG) framework that goe
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/self-evolving-dce.git
+git clone https://github.com/adilsheraz/self-evolving-dce.git
 cd self-evolving-dce
 
 # Install dependencies
