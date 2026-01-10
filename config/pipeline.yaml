@@ -1,0 +1,25 @@
+project:
+  name: self-evolving-dce
+  mode: notebook-first
+
+execution:
+  notebooks_dir: notebooks
+  executed_dir: outputs/executed_notebooks
+  run_notebooks:
+    - 01_data_ingestion.ipynb
+    - 02_chunking.ipynb
+    - 03_embedding_retrieval.ipynb
+    - 04_dynamic_context.ipynb
+    - 05_context_evaluation.ipynb
+    - 06_policy_evolution.ipynb
+    - 07_letta_agent.ipynb
+    - 08_pinecone_ltm.ipynb
+    - 09_autoft_generation.ipynb
+  fail_fast: true
+
+state:
+  path: state/pipeline_state.json
+
+logging:
+  path: logs/pipeline.log
+  level: INFO

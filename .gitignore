@@ -1,0 +1,42 @@
+# Environment files (secrets)
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Generated outputs
+outputs/
+state/
+
+# Data (may contain proprietary/sensitive data)
+data/
+new_dataset/
+
+# Development resources (cloned repos, not part of project)
+notebooks/mdn_content_repo/
+
+# OS
+.DS_Store
+Thumbs.db

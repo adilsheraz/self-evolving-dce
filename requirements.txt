@@ -1,0 +1,16 @@
+numpy
+pandas
+tqdm
+scikit-learn
+pydantic
+
+jupyter
+nbformat
+
+huggingface_hub
+python-dotenv
+PyYAML
+
+pinecone
+letta-client
+letta
