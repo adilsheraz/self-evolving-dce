@@ -90,7 +90,7 @@ class LettaPolicyStrategist:
         if not self.agent:
             raise ValueError(f"Agent not found: {agent_id}")
         
-        print(f"✅ Connected to Letta agent: {self.agent_name}")
+        print(f"Connected to Letta agent: {self.agent_name}")
         print(f"   Agent ID: {self.agent_id}")
     
     def propose_experiment(
@@ -136,6 +136,9 @@ class LettaPolicyStrategist:
         history_summary = self._format_history(experiment_history)
         
         message = f"""
+        Current policy:
+        {json.dumps(base_policy, indent=2)}
+
         Current Baseline Metrics:
         {json.dumps(baseline_metrics, indent=2)}
         
@@ -164,22 +167,8 @@ class LettaPolicyStrategist:
             messages=[{"role": "user", "content": message}]
         )
         
-        # Get latest messages
-        msgs = list(self.client.agents.messages.list(self.agent_id, limit=10))
-        
-        # Find latest assistant message
-        agent_reply = None
-        for m in reversed(msgs):
-            if m.message_type == "assistant_message":
-                agent_reply = m
-                break
-        
-        if not agent_reply:
-            raise ValueError("No assistant response found")
-        
-        # Parse JSON from response
-        proposal = self._extract_json(agent_reply.content)
-        
+        proposal = self._extract_json(self._assistant_text(response))
+
         return proposal
     
     def decide_on_results(
@@ -236,21 +225,8 @@ class LettaPolicyStrategist:
             messages=[{"role": "user", "content": message}]
         )
         
-        # Get latest messages
-        msgs = list(self.client.agents.messages.list(self.agent_id, limit=10))
-        
-        # Find latest assistant message
-        agent_reply = None
-        for m in reversed(msgs):
-            if m.message_type == "assistant_message":
-                agent_reply = m
-                break
-        
-        if not agent_reply:
-            raise ValueError("No assistant response found")
-        
-        decision = self._extract_json(agent_reply.content)
-        
+        decision = self._extract_json(self._assistant_text(response))
+
         return decision
     
     def update_experiment_memory(
@@ -281,7 +257,7 @@ class LettaPolicyStrategist:
         exp_summary += f"{experiment.get('decision', 'N/A')} - "
         exp_summary += f"Override: {experiment.get('override', {})}"
         
-        print(f"📝 Logged experiment: {exp_summary}")
+        print(f"Logged experiment: {exp_summary}")
     
     def get_memory_status(self) -> Dict[str, Any]:
         """
@@ -315,10 +291,26 @@ class LettaPolicyStrategist:
         for exp in recent:
             lines.append(f"- {exp.get('version', 'N/A')}: {exp.get('decision', 'N/A')}")
             lines.append(f"  Override: {exp.get('override', {})}")
-            lines.append(f"  Delta: {exp.get('delta_overall', 'N/A')}")
+            lines.append(f"  Delta: {exp.get('results', exp.get('deltas', {})).get('delta_overall', 'N/A')}")
         
         return "\n".join(lines)
     
+    @staticmethod
+    def _assistant_text(response):
+        # Use this request's response, never an ambiguously ordered message history.
+        for message in reversed(response.messages):
+            if message.message_type != "assistant_message":
+                continue
+            if isinstance(message.content, str):
+                return message.content
+            if isinstance(message.content, list):
+                parts = [part.text for part in message.content
+                         if getattr(part, "type", None) in (None, "text")
+                         and isinstance(getattr(part, "text", None), str)]
+                if parts:
+                    return "".join(parts)
+        raise ValueError("No assistant text in Letta response")
+
     def _extract_json(self, text: str) -> Dict[str, Any]:
         """
         Extract JSON from agent response text.
