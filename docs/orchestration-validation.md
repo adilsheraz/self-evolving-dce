@@ -78,3 +78,30 @@ Proposal validation refuses inactive `order_mode` and `redundancy_penalty` exper
 - Historical documentation outside README may contain stronger claims; it was retained as historical context, not validated certification.
 
 No required scoring or acceptance redesign was necessary for this repair. Any future change to these research definitions needs separate review.
+
+## Follow-up pre-merge review and validation
+
+After approval for further testing, review found an additional SDK compatibility issue: Letta 1.12.1 accepts assistant content as either a string or a typed list of text parts. The parser now joins text parts from the current assistant response. This is an interface correction, with no scoring or methodology changes.
+
+The following results supersede the initial report's limitations concerning dependency resolution, wheel installation and SDK response shapes:
+
+- A fresh venv without inherited site packages successfully installed the wheel and all declared dependencies. `pip check` reports no broken requirements.
+- Tested versions include Python 3.12, NumPy 2.5.4, pandas 3.0.6, pinecone 10.0.0, letta-client 1.12.1, letta 0.34.12, and huggingface_hub 2.2.0. Package imports were confirmed to come from the clean venv's installed wheel.
+- All **21 offline regressions** pass with this dependency set. Four added checks verify accepted-policy baseline updates across iterations, saved-input replay without services, serialization-failure rollback and invalid query embedding rejection.
+- Both **SDK response contract tests** pass: actual Letta response models with string/text-part content and actual Pinecone query/scored-vector models passed through retrieval conversion. No service requests are made by these tests.
+- The rebuilt wheel was reinstalled and both suites passed again with `python -I -m unittest discover`, using installed package code rather than checkout imports. Installed CLI help succeeds.
+- All ten legacy test scripts parse successfully; this is syntax validation only, not execution of their integration workflows.
+
+Reproduction after installing the full package:
+
+```sh
+python -I -m unittest discover -s tests/offline -v
+python -I -m unittest discover -s tests/sdk -v
+python -m pip check
+```
+
+The SDK contract suite is in `tests/sdk/test_response_contracts.py`; it requires the installed service SDKs. Initial lightweight offline tests remain separate.
+
+No outstanding failures remain in these executed checks. **Live validation remains blocked**: environment and local `.env` checks found no HF_TOKEN, PINECONE_API_KEY, or LETTA_API_KEY, and no configured index/agent IDs. No live calls were attempted. Credentials should be configured locally, never pasted into a PR or committed. Live testing also requires the intended index, its embedding-model provenance, and an existing test Letta agent. No knowledge-base data was changed, no experimental results were generated, and the PR remains a draft pending that decision.
+
+Review conclusion: the checked orchestration, comparison and persistence paths have no additional blocking defect identified after the text-part correction. This is a review of the repair, not certification of the framework or live deployment. Existing documented limitations—model/index provenance, agent-interpreted acceptance, log-only remote memory, no automatic resume and no cross-service transaction—remain.

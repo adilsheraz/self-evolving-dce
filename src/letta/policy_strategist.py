@@ -299,8 +299,16 @@ class LettaPolicyStrategist:
     def _assistant_text(response):
         # Use this request's response, never an ambiguously ordered message history.
         for message in reversed(response.messages):
-            if message.message_type == "assistant_message" and isinstance(message.content, str):
+            if message.message_type != "assistant_message":
+                continue
+            if isinstance(message.content, str):
                 return message.content
+            if isinstance(message.content, list):
+                parts = [part.text for part in message.content
+                         if getattr(part, "type", None) in (None, "text")
+                         and isinstance(getattr(part, "text", None), str)]
+                if parts:
+                    return "".join(parts)
         raise ValueError("No assistant text in Letta response")
 
     def _extract_json(self, text: str) -> Dict[str, Any]:

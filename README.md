@@ -30,6 +30,12 @@ python -m unittest discover -s tests/offline -v
 python -X utf8 tests/test_imports.py
 ```
 
+With the declared service SDKs installed, their response models can also be tested offline:
+
+```sh
+python -m unittest discover -s tests/sdk -v
+```
+
 Other `tests/test_*.py` files include executable integration/experiment scripts. Several contact services at import time or require files under `outputs/`. Review them and authorize external calls before unrestricted test discovery.
 
 ## Configuration and usage
@@ -75,7 +81,7 @@ Use a new state directory for each run. The first evaluation captures fixed quer
 
 Letta remains the acceptance decision-maker. Acceptance rules are natural-language instructions, not a locally enforced statistical test. Validation rejects malformed proposals, unsafe/reused versions, unknown parameters, and experiments on inactive settings. It introduces no new acceptance threshold or experimental design. The existing `order_mode` and `redundancy_penalty` parameters are unused by composition. Token limits use stored estimates and exclude rendering headers and answer-generation overhead.
 
-Letta's `update_experiment_memory()` only prints a log summary; it does not persist an agent memory block. Local checkpoints and history passed in proposal prompts provide the implemented audit trail. Current-response parsing is tested with mocked SDK objects; live SDK/provider behavior has not been validated.
+Letta's `update_experiment_memory()` only prints a log summary; it does not persist an agent memory block. Local checkpoints and history passed in proposal prompts provide the implemented audit trail. Current-response parsing supports strings and typed text parts and is tested with installed SDK response models; live provider behavior has not been validated.
 
 Historical datasets, embeddings, evaluations, and experiment logs remain under `notebooks/mvp_kb_outputs/`. They were not regenerated or reinterpreted. Context metrics are proxies and cannot establish generated-answer accuracy. See [the audit report](docs/orchestration-validation.md) for corrections, test evidence, and methodology impact. Older documents, including `PRODUCTION_SUMMARY.md`, contain historical claims and are not certification of this workflow.
 

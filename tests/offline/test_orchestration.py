@@ -196,6 +196,53 @@ class OrchestrationTests(unittest.TestCase):
         pkg = composer.compose("q", [0, 1], np.array([1., 0.]))
         self.assertEqual(pkg["excluded"][0]["reason"], "redundant")
 
+    def test_accepted_policy_is_next_baseline_on_same_inputs(self):
+        second = {**self.proposal(), "version": "v0.3",
+                  "override": {"budget_tokens": 200}}
+        self.strategist.propose_experiment.side_effect = [self.proposal(), second]
+        self.strategist.decide_on_results.side_effect = [
+            {"decision": "ACCEPT"}, {"decision": "REJECT"}]
+        result = self.loop.run_evolution_cycle(max_iterations=2, convergence_threshold=0)
+        self.assertEqual(result["accepted"], 1)
+        self.assertEqual(result["rejected"], 1)
+        self.assertEqual(result["final_version"], "v0.2")
+        first, second = result["history"]
+        for metric, value in first["experiment"]["metrics"].items():
+            self.assertAlmostEqual(second["results"][f"delta_{metric}"],
+                                   second["experiment"]["metrics"][metric] - value)
+        self.assertEqual(self.db.query.call_count, 1)
+        self.assertEqual(self.embedder.embed_query.call_count, 1)
+
+    def test_serialization_failure_preserves_previous_checkpoint(self):
+        self.loop._save_json("checkpoint.json", {"previous": True})
+        with self.assertRaises(ValueError):
+            self.loop._save_json("checkpoint.json", {"bad": float("nan")})
+        self.assertEqual(json.loads((self.loop.state_dir / "checkpoint.json").read_text()),
+                         {"previous": True})
+        self.assertFalse(list(self.loop.state_dir.glob("*.tmp")))
+
+    def test_query_embedding_failure_does_not_publish_snapshot(self):
+        for vector in (np.array([0., 0.]), np.array([float("nan"), 0.]),
+                       np.array([[1., 0.]])):
+            self.embedder.embed_query.return_value = vector
+            with self.assertRaises(ValueError):
+                self.loop.evaluate_policy({})
+            self.assertIsNone(self.loop._evaluation_inputs)
+        self.db.query.assert_not_called()
+
+    def test_snapshot_can_replay_without_services(self):
+        original = self.loop.evaluate_policy(self.loop.current_policy)
+        snapshot = json.loads((self.loop.state_dir / "evaluation_inputs.json").read_text())
+        replayed = []
+        for entry in snapshot:
+            composer = ContextComposer(entry["chunks"], np.array(entry["embeddings"]),
+                                       self.loop.current_policy)
+            package = composer.compose(entry["query"], list(range(len(entry["chunks"]))),
+                                       np.array(entry["query_vector"]))
+            replayed.append(ContextEvaluator().evaluate(package))
+        for metric, value in original["means"].items():
+            self.assertAlmostEqual(value, np.mean([row[metric] for row in replayed]))
+
     def test_letta_uses_current_response(self):
         strategist = LettaPolicyStrategist.__new__(LettaPolicyStrategist)
         strategist.client = Mock()
