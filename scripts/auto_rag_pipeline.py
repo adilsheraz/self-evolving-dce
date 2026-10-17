@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Auto-RAG Pipeline
-Automated pipeline: Dataset → Embeddings → Vector DB → Retrieval Ready
+Automated pipeline: Dataset -> Embeddings -> Vector DB -> Retrieval Ready
 
 Usage:
     python scripts/auto_rag_pipeline.py --dataset data/my_docs.jsonl
@@ -220,7 +220,7 @@ def print_summary(chunks: List[Dict[str, Any]], ltm: PineconeLTM):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Auto-RAG Pipeline: Automated dataset → embeddings → vector DB"
+        description="Auto-RAG Pipeline: Automated dataset -> embeddings -> vector DB"
     )
     
     # Dataset options

@@ -1,7 +1,7 @@
 """
 Self-Evolving Dynamic Context Engineering (DCE) - Core Library
 
-A production-ready framework for dynamic context composition with autonomous policy evolution.
+A research framework for dynamic context composition and agent-guided policy experiments.
 
 Key Features:
 - Dynamic context composition with multi-objective optimization
@@ -11,12 +11,7 @@ Key Features:
 - Comprehensive evaluation metrics
 
 Usage:
-    from src import DCEEngine, ContextComposer, PineconeLTM
-    from src.letta import create_policy_strategist
-    
-    # Quick start
-    engine = DCEEngine(config={...})
-    result = engine.process_query("your query")
+    from src import ContextComposer, ContextEvaluator, SelfEvolvingLoop
 """
 
 __version__ = "0.1.0"
