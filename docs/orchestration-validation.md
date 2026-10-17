@@ -105,3 +105,23 @@ The SDK contract suite is in `tests/sdk/test_response_contracts.py`; it requires
 No outstanding failures remain in these executed checks. **Live validation remains blocked**: environment and local `.env` checks found no HF_TOKEN, PINECONE_API_KEY, or LETTA_API_KEY, and no configured index/agent IDs. No live calls were attempted. Credentials should be configured locally, never pasted into a PR or committed. Live testing also requires the intended index, its embedding-model provenance, and an existing test Letta agent. No knowledge-base data was changed, no experimental results were generated, and the PR remains a draft pending that decision.
 
 Review conclusion: the checked orchestration, comparison and persistence paths have no additional blocking defect identified after the text-part correction. This is a review of the repair, not certification of the framework or live deployment. Existing documented limitations—model/index provenance, agent-interpreted acceptance, log-only remote memory, no automatic resume and no cross-service transaction—remain.
+
+## Approved live-service smoke checks
+
+The user subsequently configured credentials in the local ignored `.env`. This supersedes the preceding missing-credentials blocker. Secrets were not printed, copied into reports or committed. Bounded live checks produced these results:
+
+| Check | Result |
+| --- | --- |
+| HF identity/authentication | Pass. |
+| Pinecone index listing | Pass: `dce-mvp` and `self-evolving-dce-ltm`, both dimension 384 and cosine metric. |
+| Demo index `dce-knowledge-base` | Absent; no index was created. |
+| `dce-mvp` stats/retrieval | Empty; no sample matches. |
+| `self-evolving-dce-ltm` stats | `kb_chunks`: 2,047; `context_evaluations`: 9; `dynamic_contexts`: 10; `qa_biotech`: 5,662. Counts are service inventory, not experimental results. |
+| Read-only `kb_chunks` sample | A match and embedding values returned. Metadata contained doc_id, heading, source_path, title, tokens and type, but no text or embedding-model provenance. Conversion correctly raised ValueError. Only one match was sampled; this does not establish that every record lacks text. |
+| HF configured MiniLM embedding request | Blocked: HTTP 402. Service error explicitly states no remaining Inference Providers credits. Authentication alone does not establish inference access. |
+| Letta existing strategist agent retrieval | Pass. |
+| Letta minimal JSON smoke message | Blocked: HTTP 402 APIStatusError. Response content was not parsed because execution failed. No successful live proposal/decision round trip was established. |
+
+Pinecone sampling used a fixed synthetic vector only to validate retrieval schema; it was not a relevance evaluation or baseline/candidate comparison. No knowledge-base writes, new indexes, generated-answer tests or policy updates were performed. A failed Letta request was sent to the existing agent; server-side request/conversation logging may still occur.
+
+Remaining live prerequisites are billing/credits for HF and Letta, plus an identified index containing required chunk text and verifiable embedding-model provenance. Restoring index metadata or reconstructing text from local artifacts must be planned and verified separately; no silent fallback, re-embedding or metric change was introduced. End-to-end live orchestration remains **unexecuted**, not passing. Keep the PR in draft until these limitations are resolved or explicitly accepted for an offline-validated repair.
